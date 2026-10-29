@@ -4,15 +4,17 @@
     <TargetFramework>net48</TargetFramework>
     <OutputType>Library</OutputType>
     <RootNamespace>ImageOrientationChecker</RootNamespace>
-    <AssemblyName>ImageOrientationChecker</AssemblyName>
+    <!-- Eclipse only lists binary scripts whose file name ends in .esapi.dll. -->
+    <AssemblyName>ImageOrientationChecker.esapi</AssemblyName>
     <Platforms>x64</Platforms>
     <PlatformTarget>x64</PlatformTarget>
     <LangVersion>7.3</LangVersion>
 
-    <!-- The script sets its own [assembly: AssemblyVersion("1.0.*")], so don't generate one.
-         Wildcard versions also require non-deterministic builds. -->
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <Deterministic>false</Deterministic>
+    <!-- Script version shown in the message box. Change this when you release. -->
+    <Version>1.0.0</Version>
+    <!-- Show the version exactly as written above; the git commit is stored separately
+         (see AddGitCommitMetadata below). -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
 
     <!-- Keep the old output folders (bin\debug, bin\release) without a net48 subfolder. -->
     <OutputPath>bin\$(Configuration)\</OutputPath>
@@ -49,5 +51,30 @@
     <!-- Lets the project build without the .NET Framework 4.8 targeting pack installed. -->
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
   </ItemGroup>
+
+  <!-- Stores the current git commit in the assembly as [AssemblyMetadata("GitCommit", "...")].
+       "-dirty" is appended when tracked files have uncommitted changes, and "unknown" is used
+       when git isn't available. -->
+  <Target Name="AddGitCommitMetadata" BeforeTargets="GetAssemblyAttributes">
+    <Exec Command="git rev-parse --short HEAD" WorkingDirectory="$(MSBuildProjectDirectory)"
+          ConsoleToMSBuild="true" IgnoreExitCode="true" EchoOff="true"
+          StandardOutputImportance="low" StandardErrorImportance="low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="GitCommit" />
+      <Output TaskParameter="ExitCode" PropertyName="_GitExitCode" />
+    </Exec>
+    <Exec Command="git status --porcelain --untracked-files=no" WorkingDirectory="$(MSBuildProjectDirectory)"
+          Condition="'$(_GitExitCode)' == '0'"
+          ConsoleToMSBuild="true" IgnoreExitCode="true" EchoOff="true"
+          StandardOutputImportance="low" StandardErrorImportance="low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_GitStatus" />
+    </Exec>
+    <PropertyGroup>
+      <GitCommit Condition="'$(_GitExitCode)' != '0'">unknown</GitCommit>
+      <GitCommit Condition="'$(_GitExitCode)' == '0' And '$(_GitStatus)' != ''">$(GitCommit)-dirty</GitCommit>
+    </PropertyGroup>
+    <ItemGroup>
+      <AssemblyMetadata Include="GitCommit" Value="$(GitCommit)" />
+    </ItemGroup>
+  </Target>
 
 </Project>

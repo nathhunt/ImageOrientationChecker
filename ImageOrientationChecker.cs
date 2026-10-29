@@ -14,16 +14,11 @@
 
 using System;
 using System.Globalization;
-using System.Reflection;
 #if !UNIT_TEST
+using System.Reflection;
 using System.Windows;
 using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
-
-// Build number and revision are filled in by the compiler on each build
-// (days since 2000-01-01 and seconds since midnight / 2), so the message box
-// can show exactly which build is running.
-[assembly: AssemblyVersion("1.0.*")]
 #endif
 
 namespace VMS.TPS
@@ -41,8 +36,7 @@ namespace VMS.TPS
         {
             Image image = context.Image;
 
-            string buildInfo = OrientationChecker.BuildInfo(
-                Assembly.GetExecutingAssembly().GetName().Version);
+            string buildInfo = ReadBuildInfo();
 
             if (image == null)
             {
@@ -64,6 +58,32 @@ namespace VMS.TPS
                 : "";
 
             MessageBox.Show(OrientationChecker.BuildMessage(image.Id, studyId, tag, buildInfo), Title);
+        }
+
+        // The version and commit are written into the assembly by ImageOrientationChecker.csproj
+        // (<Version> and the AddGitCommitMetadata target). When Eclipse compiles this file as a
+        // single-file script they are absent, and BuildInfo reports that instead.
+        private static string ReadBuildInfo()
+        {
+            Assembly assembly = Assembly.GetExecutingAssembly();
+
+            string version = null;
+            object[] versions = assembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false);
+            if (versions.Length > 0)
+            {
+                version = ((AssemblyInformationalVersionAttribute)versions[0]).InformationalVersion;
+            }
+
+            string commit = null;
+            foreach (AssemblyMetadataAttribute metadata in assembly.GetCustomAttributes(typeof(AssemblyMetadataAttribute), false))
+            {
+                if (metadata.Key == "GitCommit")
+                {
+                    commit = metadata.Value;
+                }
+            }
+
+            return OrientationChecker.BuildInfo(version, commit);
         }
     }
 #endif
@@ -156,17 +176,25 @@ namespace VMS.TPS
             return "(" + string.Join(", ", parts) + ")";
         }
 
-        // System.Version is fully qualified because ESAPI defines a VMS.TPS.Version
-        // namespace, which would otherwise win inside namespace VMS.TPS.
-        internal static string BuildInfo(System.Version version)
+        // Formats the version line, e.g. "Version 1.2.0  (commit 3f9c2ab)".
+        // A commit ending in "-dirty" was built with uncommitted changes.
+        internal static string BuildInfo(string version, string commit)
         {
-            // Reverse the "1.0.*" auto-versioning scheme to recover the build time (local time).
-            DateTime built = new DateTime(2000, 1, 1)
-                .AddDays(version.Build)
-                .AddSeconds(version.Revision * 2);
+            if (string.IsNullOrEmpty(version))
+            {
+                version = "not set";
+            }
 
-            return string.Format(CultureInfo.InvariantCulture,
-                "Version {0}  (built {1:yyyy-MM-dd HH:mm})", version, built);
+            if (string.IsNullOrEmpty(commit))
+            {
+                commit = "unknown";
+            }
+            else if (commit.EndsWith("-dirty", StringComparison.Ordinal))
+            {
+                commit = commit.Substring(0, commit.Length - "-dirty".Length) + " + uncommitted changes";
+            }
+
+            return "Version " + version + "  (commit " + commit + ")";
         }
     }
 }

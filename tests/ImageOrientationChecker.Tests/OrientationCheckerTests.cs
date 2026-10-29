@@ -136,20 +136,31 @@ namespace ImageOrientationChecker.Tests
         // ---- BuildInfo ------------------------------------------------------
 
         [TestMethod]
-        public void BuildInfo_DecodesBuildDateFromVersion()
+        public void BuildInfo_VersionAndCommit_ShowsBoth()
         {
-            // 9798 days after 2000-01-01 is 2026-10-29; 31650 * 2 s after midnight is 17:35.
-            string info = OrientationChecker.BuildInfo(new Version(1, 0, 9798, 31650));
-
-            Assert.AreEqual("Version 1.0.9798.31650  (built 2026-10-29 17:35)", info);
+            Assert.AreEqual("Version 1.2.0  (commit 3f9c2ab)", OrientationChecker.BuildInfo("1.2.0", "3f9c2ab"));
         }
 
         [TestMethod]
-        public void BuildInfo_ZeroBuildAndRevision_IsEpoch()
+        public void BuildInfo_PreReleaseVersion_IsShownAsWritten()
         {
-            string info = OrientationChecker.BuildInfo(new Version(2, 3, 0, 0));
+            Assert.AreEqual("Version 2.0.0-beta.1  (commit 3f9c2ab)", OrientationChecker.BuildInfo("2.0.0-beta.1", "3f9c2ab"));
+        }
 
-            Assert.AreEqual("Version 2.3.0.0  (built 2000-01-01 00:00)", info);
+        [TestMethod]
+        public void BuildInfo_DirtyCommit_SaysUncommittedChanges()
+        {
+            Assert.AreEqual("Version 1.2.0  (commit 3f9c2ab + uncommitted changes)",
+                OrientationChecker.BuildInfo("1.2.0", "3f9c2ab-dirty"));
+        }
+
+        [TestMethod]
+        [DataRow(null)]
+        [DataRow("")]
+        public void BuildInfo_NoVersionOrCommit_SaysSo(string missing)
+        {
+            // What a single-file script (compiled by Eclipse, not the .csproj) reports.
+            Assert.AreEqual("Version not set  (commit unknown)", OrientationChecker.BuildInfo(missing, missing));
         }
 
         // ---- BuildMessage ---------------------------------------------------

@@ -26,7 +26,8 @@ A message box then shows:
 - the image ID and study ID
 - the raw tag `(0020,0037)` value
 - **ALLOWED** (with the matching orientation) or **NOT ALLOWED**
-- the script version and build time, so you can tell which build is running
+- the script version and the git commit it was built from, so you can tell exactly which
+  build is running
 
 ## Requirements
 
@@ -44,9 +45,15 @@ VS Code's C# Dev Kit, which doesn't support the older .NET Framework project for
 ## Usage
 
 1. Open a patient in Eclipse and load an image (for example, in the Image module).
-2. Go to **Tools > Scripts** and run `ImageOrientationChecker.cs`. You can run the
-   single-file script directly, or run the compiled DLL (see below).
-3. Read the result in the message box.
+2. Go to **Tools > Scripts**. If the script isn't listed, click **Change Folder...** and
+   choose the folder that contains `ImageOrientationChecker.esapi.dll`, for example
+   `bin\Release\` or your clinic's published scripts folder.
+3. Select `ImageOrientationChecker.esapi.dll` and click **Run**.
+4. Read the result in the message box.
+
+You can also run `ImageOrientationChecker.cs` directly as a single-file script. Eclipse
+then compiles the file without the project, so the message box shows
+`Version not set  (commit unknown)`. Use the DLL when you need to know which version ran.
 
 The script only reads data. It does not change anything in the database.
 
@@ -72,12 +79,12 @@ The repository includes a `.vscode` folder with:
 - `settings.json`: editor settings for the project, with `bin/` and `obj/` hidden.
 - `extensions.json`: recommends C# Dev Kit and the C# extension.
 
-Output goes to `bin\Debug\` or `bin\Release\`.
+Output goes to `bin\Debug\ImageOrientationChecker.esapi.dll` or
+`bin\Release\ImageOrientationChecker.esapi.dll`.
 
-> **Note:** Eclipse loads a compiled script only if its file name ends in `.esapi.dll`.
-> If you want to run the DLL instead of the `.cs` file, change `AssemblyName` to
-> `ImageOrientationChecker.esapi` in the `.csproj`. Depending on your clinic's
-> configuration, scripts may also need to be approved before they can run.
+> **Note:** Eclipse lists a compiled script only if its file name ends in `.esapi.dll`,
+> which is why the project's `AssemblyName` is `ImageOrientationChecker.esapi`. Depending
+> on your clinic's configuration, scripts may also need to be approved before they can run.
 
 ## Testing
 
@@ -118,23 +125,26 @@ The tests cover:
 
 ## Versioning
 
-The version is set in `ImageOrientationChecker.cs`:
+You set the version yourself in `ImageOrientationChecker.csproj`:
 
-```csharp
-[assembly: AssemblyVersion("1.0.*")]
+```xml
+<Version>1.0.0</Version>
 ```
 
-The `*` tells the compiler to fill in the build number (days since 1 January 2000) and
-the revision (seconds since midnight, divided by 2) when it builds. The script reverses
-this to show the build date and time in the message box, for example:
+Each build also records the current git commit, and the message box shows both:
 
 ```
-Version 1.0.9798.31650  (built 2026-10-29 17:35)
+Version 1.0.0  (commit 3f9c2ab)
 ```
 
-To release a new version, change the major or minor number (for example, `"1.1.*"`).
-Wildcard versions don't work with deterministic builds, so the `.csproj` sets
-`<Deterministic>false</Deterministic>`.
+- If tracked files have uncommitted changes when you build, the line reads
+  `(commit 3f9c2ab + uncommitted changes)`. Commit before you build a release.
+- If git isn't installed, or the folder isn't a git repository, the build still succeeds
+  and the commit shows as `unknown`.
+
+The `AddGitCommitMetadata` target in the `.csproj` runs `git rev-parse --short HEAD` and
+stores the result as `[assembly: AssemblyMetadata("GitCommit", "...")]`. The script reads
+that attribute and `AssemblyInformationalVersion` (which comes from `<Version>`) when it runs.
 
 ## References
 
@@ -142,8 +152,8 @@ Wildcard versions don't work with deterministic builds, so the `.csproj` sets
   <https://dicom.nema.org/medical/dicom/current/output/chtml/part03/sect_C.7.6.2.html#sect_C.7.6.2.1.1>
 - DICOM PS3.3, C.7.3.1.1.2, *Patient Position*, which defines HFS, HFP, HFDL and the other codes:
   <https://dicom.nema.org/medical/dicom/current/output/chtml/part03/sect_C.7.3.html#sect_C.7.3.1.1.2>
-- `AssemblyVersionAttribute`, which describes how wildcard build and revision numbers are generated:
-  <https://learn.microsoft.com/dotnet/api/system.reflection.assemblyversionattribute>
+- MSBuild properties for assembly version information (`Version`, `InformationalVersion`,
+  `AssemblyMetadata`): <https://learn.microsoft.com/dotnet/core/project-sdk/msbuild-props#assembly-attribute-properties>
 - Varian ESAPI documentation and examples: <https://github.com/VarianAPIs>
 - C# Dev Kit project format requirements: <https://code.visualstudio.com/docs/csharp/cs-dev-kit-faq>
 - MSTest documentation: <https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-intro>
