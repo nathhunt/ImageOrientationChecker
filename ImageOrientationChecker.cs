@@ -7,9 +7,15 @@
 //
 // Usage: Open a patient with an image loaded (e.g. in the Image module),
 // then run this script from Eclipse: Tools > Scripts.
+//
+// The unit test project compiles this same file with UNIT_TEST defined,
+// which leaves out everything that depends on ESAPI so the tests can build
+// and run without the Varian assemblies.
 
 using System;
+using System.Globalization;
 using System.Reflection;
+#if !UNIT_TEST
 using System.Windows;
 using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
@@ -18,42 +24,16 @@ using VMS.TPS.Common.Model.Types;
 // (days since 2000-01-01 and seconds since midnight / 2), so the message box
 // can show exactly which build is running.
 [assembly: AssemblyVersion("1.0.*")]
+#endif
 
 namespace VMS.TPS
 {
+#if !UNIT_TEST
     public class Script
     {
         public Script()
         {
         }
-
-        // Reference direction cosine sets Varian expects for tag (0020,0037).
-        // Each row is: Xx, Xy, Xz, Yx, Yy, Yz  (row cosines, then column cosines).
-        private static readonly string[] OrientationNames = new string[]
-        {
-            "HFS  (Head First Supine)",
-            "HFP  (Head First Prone)",
-            "HFDL (Head First Decubitus Left)",
-            "HFDR (Head First Decubitus Right)",
-            "FFS  (Feet First Supine)",
-            "FFP  (Feet First Prone)",
-            "FFDL (Feet First Decubitus Left)",
-            "FFDR (Feet First Decubitus Right)"
-        };
-
-        private static readonly double[][] OrientationValues = new double[][]
-        {
-            new double[] {  1,  0, 0,  0,  1, 0 }, // HFS
-            new double[] { -1,  0, 0,  0, -1, 0 }, // HFP
-            new double[] {  0, -1, 0,  1,  0, 0 }, // HFDL
-            new double[] {  0,  1, 0, -1,  0, 0 }, // HFDR
-            new double[] { -1,  0, 0,  0,  1, 0 }, // FFS
-            new double[] {  1,  0, 0,  0, -1, 0 }, // FFP
-            new double[] {  0,  1, 0,  1,  0, 0 }, // FFDL
-            new double[] {  0, -1, 0, -1,  0, 0 }, // FFDR
-        };
-
-        private const double Tolerance = 0.000001;
 
         private const string Title = "Image Orientation Check";
 
@@ -61,9 +41,12 @@ namespace VMS.TPS
         {
             Image image = context.Image;
 
+            string buildInfo = OrientationChecker.BuildInfo(
+                Assembly.GetExecutingAssembly().GetName().Version);
+
             if (image == null)
             {
-                MessageBox.Show("No image is currently open.\r\n\r\n" + BuildInfo(), Title);
+                MessageBox.Show("No image is currently open.\r\n\r\n" + buildInfo, Title);
                 return;
             }
 
@@ -76,27 +59,68 @@ namespace VMS.TPS
                 yDir.x, yDir.y, yDir.z
             };
 
-            string tagString = FormatTag(tag);
+            string studyId = (image.Series != null && image.Series.Study != null)
+                ? image.Series.Study.Id
+                : "";
 
-            string matchName = null;
+            MessageBox.Show(OrientationChecker.BuildMessage(image.Id, studyId, tag, buildInfo), Title);
+        }
+    }
+#endif
+
+    // ESAPI-free logic, kept separate from Script so it can be unit tested.
+    internal static class OrientationChecker
+    {
+        // Reference direction cosine sets Varian expects for tag (0020,0037).
+        // Each row is: Xx, Xy, Xz, Yx, Yy, Yz  (row cosines, then column cosines).
+        internal static readonly string[] OrientationNames = new string[]
+        {
+            "HFS  (Head First Supine)",
+            "HFP  (Head First Prone)",
+            "HFDL (Head First Decubitus Left)",
+            "HFDR (Head First Decubitus Right)",
+            "FFS  (Feet First Supine)",
+            "FFP  (Feet First Prone)",
+            "FFDL (Feet First Decubitus Left)",
+            "FFDR (Feet First Decubitus Right)"
+        };
+
+        internal static readonly double[][] OrientationValues = new double[][]
+        {
+            new double[] {  1,  0, 0,  0,  1, 0 }, // HFS
+            new double[] { -1,  0, 0,  0, -1, 0 }, // HFP
+            new double[] {  0, -1, 0,  1,  0, 0 }, // HFDL
+            new double[] {  0,  1, 0, -1,  0, 0 }, // HFDR
+            new double[] { -1,  0, 0,  0,  1, 0 }, // FFS
+            new double[] {  1,  0, 0,  0, -1, 0 }, // FFP
+            new double[] {  0,  1, 0,  1,  0, 0 }, // FFDL
+            new double[] {  0, -1, 0, -1,  0, 0 }, // FFDR
+        };
+
+        internal const double Tolerance = 0.000001;
+
+        // Returns the name of the matching orientation, or null if none match.
+        internal static string FindMatch(double[] tag)
+        {
             for (int i = 0; i < OrientationValues.Length; i++)
             {
                 if (Matches(tag, OrientationValues[i]))
                 {
-                    matchName = OrientationNames[i];
-                    break;
+                    return OrientationNames[i];
                 }
             }
+            return null;
+        }
 
-            string studyId = (image.Series != null && image.Series.Study != null)
-                ? image.Series.Study.Id
-                : "";
+        internal static string BuildMessage(string imageId, string studyId, double[] tag, string buildInfo)
+        {
+            string matchName = FindMatch(tag);
 
             string resultLine = (matchName != null)
                 ? "ALLOWED  -  matches " + matchName
                 : "NOT ALLOWED  -  does not match any expected orientation";
 
-            string message = string.Format(
+            return string.Format(
                 "Image:  {0}   (Study: {1})\r\n" +
                 "--------------------------------------------\r\n" +
                 "Tag (0020,0037) Image Orientation (Patient):\r\n" +
@@ -105,12 +129,10 @@ namespace VMS.TPS
                 "Result:  {3}\r\n" +
                 "--------------------------------------------\r\n" +
                 "{4}",
-                image.Id, studyId, tagString, resultLine, BuildInfo());
-
-            MessageBox.Show(message, Title);
+                imageId, studyId, FormatTag(tag), resultLine, buildInfo);
         }
 
-        private static bool Matches(double[] tag, double[] reference)
+        internal static bool Matches(double[] tag, double[] reference)
         {
             for (int i = 0; i < 6; i++)
             {
@@ -122,26 +144,27 @@ namespace VMS.TPS
             return true;
         }
 
-        private static string BuildInfo()
+        internal static string FormatTag(double[] values)
         {
-            Version version = Assembly.GetExecutingAssembly().GetName().Version;
+            string[] parts = new string[values.Length];
+            for (int i = 0; i < values.Length; i++)
+            {
+                // Invariant culture so the decimal separator is always "." and never
+                // collides with the ", " used between values (e.g. on nl-NL systems).
+                parts[i] = values[i].ToString("0.#####", CultureInfo.InvariantCulture);
+            }
+            return "(" + string.Join(", ", parts) + ")";
+        }
 
+        internal static string BuildInfo(Version version)
+        {
             // Reverse the "1.0.*" auto-versioning scheme to recover the build time (local time).
             DateTime built = new DateTime(2000, 1, 1)
                 .AddDays(version.Build)
                 .AddSeconds(version.Revision * 2);
 
-            return string.Format("Version {0}  (built {1:yyyy-MM-dd HH:mm})", version, built);
-        }
-
-        private static string FormatTag(double[] values)
-        {
-            string[] parts = new string[values.Length];
-            for (int i = 0; i < values.Length; i++)
-            {
-                parts[i] = values[i].ToString("0.#####");
-            }
-            return "(" + string.Join(", ", parts) + ")";
+            return string.Format(CultureInfo.InvariantCulture,
+                "Version {0}  (built {1:yyyy-MM-dd HH:mm})", version, built);
         }
     }
 }

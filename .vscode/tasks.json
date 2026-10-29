@@ -1,6 +1,7 @@
 {
   // MSBuild must be on PATH: open VS Code from a "Developer PowerShell for VS"
   // or "Developer Command Prompt for VS" window (Visual Studio / Build Tools 2022).
+  // The Test task needs the .NET SDK (dotnet) on PATH.
   "version": "2.0.0",
   "tasks": [
     {
@@ -9,6 +10,7 @@
       "command": "msbuild",
       "args": [
         "ImageOrientationChecker.sln",
+        "/restore",
         "/t:Build",
         "/p:Configuration=Debug;Platform=x64",
         "/nologo",
@@ -24,6 +26,7 @@
       "command": "msbuild",
       "args": [
         "ImageOrientationChecker.sln",
+        "/restore",
         "/t:Build",
         "/p:Configuration=Release;Platform=x64",
         "/nologo",
@@ -39,11 +42,24 @@
       "command": "msbuild",
       "args": [
         "ImageOrientationChecker.sln",
+        "/restore",
         "/t:Clean",
         "/p:Configuration=Debug;Platform=x64",
         "/nologo",
         "/v:minimal"
       ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Test",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "test",
+        "tests/ImageOrientationChecker.Tests/ImageOrientationChecker.Tests.csproj",
+        "--nologo"
+      ],
+      "group": { "kind": "test", "isDefault": true },
       "problemMatcher": "$msCompile"
     }
   ]

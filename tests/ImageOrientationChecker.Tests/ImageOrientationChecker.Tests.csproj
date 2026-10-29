@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- net48 matches what Eclipse runs the script on; net8.0 lets the tests also run on Linux/macOS. -->
+    <TargetFrameworks>net48;net8.0</TargetFrameworks>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!-- Leaves the ESAPI-dependent Script class out of the compiled script source. -->
+    <DefineConstants>$(DefineConstants);UNIT_TEST</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Compile the script itself rather than referencing the ESAPI project,
+         so the tests don't need the Varian assemblies installed. -->
+    <Compile Include="..\..\ImageOrientationChecker.cs" Link="ImageOrientationChecker.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
+    <PackageReference Include="MSTest.TestAdapter" Version="4.4.1" />
+    <PackageReference Include="MSTest.TestFramework" Version="4.4.1" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

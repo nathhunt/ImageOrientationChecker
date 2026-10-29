@@ -5,6 +5,10 @@ VisualStudioVersion = 17.14.37531.7 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageOrientationChecker", "ImageOrientationChecker.csproj", "{723CD1DC-E265-4875-8B33-7F1E52F413EE}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{E69A022A-E8A1-4E7C-A5B2-FD9F1E829878}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageOrientationChecker.Tests", "tests\ImageOrientationChecker.Tests\ImageOrientationChecker.Tests.csproj", "{94174D0F-4812-4E56-B74D-7155C298DF8A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -15,11 +19,18 @@ Global
 		{723CD1DC-E265-4875-8B33-7F1E52F413EE}.Debug|x64.Build.0 = Debug|x64
 		{723CD1DC-E265-4875-8B33-7F1E52F413EE}.Release|x64.ActiveCfg = Release|x64
 		{723CD1DC-E265-4875-8B33-7F1E52F413EE}.Release|x64.Build.0 = Release|x64
+		{94174D0F-4812-4E56-B74D-7155C298DF8A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{94174D0F-4812-4E56-B74D-7155C298DF8A}.Debug|x64.Build.0 = Debug|Any CPU
+		{94174D0F-4812-4E56-B74D-7155C298DF8A}.Release|x64.ActiveCfg = Release|Any CPU
+		{94174D0F-4812-4E56-B74D-7155C298DF8A}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {111401DA-ABF3-47A3-9779-3248915AACA1}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{94174D0F-4812-4E56-B74D-7155C298DF8A} = {E69A022A-E8A1-4E7C-A5B2-FD9F1E829878}
 	EndGlobalSection
 EndGlobal
