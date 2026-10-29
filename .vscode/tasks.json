@@ -1,0 +1,61 @@
+{
+  // Requires the .NET SDK (dotnet) on PATH; it comes with Visual Studio 2022.
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build (Debug)",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "ImageOrientationChecker.sln",
+        "-c", "Debug",
+        "-p:Platform=x64",
+        "--nologo",
+        "-clp:NoSummary"
+      ],
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Build (Release)",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "ImageOrientationChecker.sln",
+        "-c", "Release",
+        "-p:Platform=x64",
+        "--nologo",
+        "-clp:NoSummary"
+      ],
+      "group": "build",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Clean",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "clean",
+        "ImageOrientationChecker.sln",
+        "-c", "Debug",
+        "-p:Platform=x64",
+        "--nologo"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Test",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "test",
+        "tests/ImageOrientationChecker.Tests/ImageOrientationChecker.Tests.csproj",
+        "--nologo"
+      ],
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}

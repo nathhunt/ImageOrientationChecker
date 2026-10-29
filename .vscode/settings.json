@@ -1,0 +1,19 @@
+{
+  "dotnet.defaultSolution": "ImageOrientationChecker.sln",
+  "editor.formatOnSave": false,
+  "files.encoding": "utf8",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "[csharp]": {
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true
+  },
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true
+  },
+  "search.exclude": {
+    "**/bin": true,
+    "**/obj": true
+  }
+}
