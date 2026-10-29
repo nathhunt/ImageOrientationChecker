@@ -9,9 +9,15 @@
 // then run this script from Eclipse: Tools > Scripts.
 
 using System;
+using System.Reflection;
 using System.Windows;
 using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
+
+// Build number and revision are filled in by the compiler on each build
+// (days since 2000-01-01 and seconds since midnight / 2), so the message box
+// can show exactly which build is running.
+[assembly: AssemblyVersion("1.0.*")]
 
 namespace VMS.TPS
 {
@@ -49,13 +55,15 @@ namespace VMS.TPS
 
         private const double Tolerance = 0.000001;
 
+        private const string Title = "Image Orientation Check";
+
         public void Execute(ScriptContext context)
         {
             Image image = context.Image;
 
             if (image == null)
             {
-                MessageBox.Show("No image is currently open.", "Image Orientation Check");
+                MessageBox.Show("No image is currently open.\r\n\r\n" + BuildInfo(), Title);
                 return;
             }
 
@@ -94,10 +102,12 @@ namespace VMS.TPS
                 "Tag (0020,0037) Image Orientation (Patient):\r\n" +
                 "    {2}\r\n" +
                 "--------------------------------------------\r\n" +
-                "Result:  {3}",
-                image.Id, studyId, tagString, resultLine);
+                "Result:  {3}\r\n" +
+                "--------------------------------------------\r\n" +
+                "{4}",
+                image.Id, studyId, tagString, resultLine, BuildInfo());
 
-            MessageBox.Show(message, "Image Orientation Check");
+            MessageBox.Show(message, Title);
         }
 
         private static bool Matches(double[] tag, double[] reference)
@@ -110,6 +120,18 @@ namespace VMS.TPS
                 }
             }
             return true;
+        }
+
+        private static string BuildInfo()
+        {
+            Version version = Assembly.GetExecutingAssembly().GetName().Version;
+
+            // Reverse the "1.0.*" auto-versioning scheme to recover the build time (local time).
+            DateTime built = new DateTime(2000, 1, 1)
+                .AddDays(version.Build)
+                .AddSeconds(version.Revision * 2);
+
+            return string.Format("Version {0}  (built {1:yyyy-MM-dd HH:mm})", version, built);
         }
 
         private static string FormatTag(double[] values)

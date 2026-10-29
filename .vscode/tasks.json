@@ -1,0 +1,50 @@
+{
+  // MSBuild must be on PATH: open VS Code from a "Developer PowerShell for VS"
+  // or "Developer Command Prompt for VS" window (Visual Studio / Build Tools 2022).
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build (Debug)",
+      "type": "process",
+      "command": "msbuild",
+      "args": [
+        "ImageOrientationChecker.sln",
+        "/t:Build",
+        "/p:Configuration=Debug;Platform=x64",
+        "/nologo",
+        "/v:minimal",
+        "/clp:NoSummary"
+      ],
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Build (Release)",
+      "type": "process",
+      "command": "msbuild",
+      "args": [
+        "ImageOrientationChecker.sln",
+        "/t:Build",
+        "/p:Configuration=Release;Platform=x64",
+        "/nologo",
+        "/v:minimal",
+        "/clp:NoSummary"
+      ],
+      "group": "build",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Clean",
+      "type": "process",
+      "command": "msbuild",
+      "args": [
+        "ImageOrientationChecker.sln",
+        "/t:Clean",
+        "/p:Configuration=Debug;Platform=x64",
+        "/nologo",
+        "/v:minimal"
+      ],
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}
