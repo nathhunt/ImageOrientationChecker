@@ -156,7 +156,9 @@ namespace VMS.TPS
             return "(" + string.Join(", ", parts) + ")";
         }
 
-        internal static string BuildInfo(Version version)
+        // System.Version is fully qualified because ESAPI defines a VMS.TPS.Version
+        // namespace, which would otherwise win inside namespace VMS.TPS.
+        internal static string BuildInfo(System.Version version)
         {
             // Reverse the "1.0.*" auto-versioning scheme to recover the build time (local time).
             DateTime built = new DateTime(2000, 1, 1)
