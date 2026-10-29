@@ -30,13 +30,16 @@ A message box then shows:
 
 ## Requirements
 
-- Varian Eclipse with ESAPI **18.1**. The project references the ESAPI assemblies in
-  `C:\Program Files (x86)\Varian\RTM\18.1\esapi\API\`. If your version is different, update
-  the `HintPath` entries in `ImageOrientationChecker.csproj`.
-- .NET Framework 4.8 and an x64 build.
-- To build: Visual Studio 2022, or Visual Studio Build Tools 2022 (MSBuild).
-- To run the unit tests: the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-  or later. The tests don't need Eclipse or the ESAPI assemblies.
+- Varian Eclipse with ESAPI **18.1**. The project looks for the ESAPI assemblies in
+  `C:\Program Files (x86)\Varian\RTM\18.1\esapi\API`. For another version, change the
+  `EsapiPath` property in `ImageOrientationChecker.csproj`, or override it when you build:
+  `dotnet build -p:EsapiPath="C:\...\esapi\API"`.
+- The script targets .NET Framework 4.8 (x64).
+- To build and test: the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or
+  later (Visual Studio 2022 includes it). The tests don't need Eclipse or the ESAPI assemblies.
+
+Both projects use the SDK-style project format, so they load in Visual Studio 2022 and in
+VS Code's C# Dev Kit, which doesn't support the older .NET Framework project format.
 
 ## Usage
 
@@ -53,26 +56,23 @@ The script only reads data. It does not change anything in the database.
 
 Open `ImageOrientationChecker.sln`, pick **Debug|x64** or **Release|x64**, and build.
 
+### Command line
+
+```bash
+dotnet build ImageOrientationChecker.sln -c Release -p:Platform=x64
+```
+
 ### VS Code
 
 The repository includes a `.vscode` folder with:
 
 - `tasks.json`: **Build (Debug)** (the default build task, <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd>),
-  **Build (Release)** and **Clean**, which run MSBuild on the solution, and **Test**
-  (the default test task), which runs `dotnet test`. Compiler errors appear in the
-  Problems panel.
+  **Build (Release)**, **Clean** and **Test** (the default test task). Each one runs the
+  `dotnet` CLI, and compiler errors appear in the Problems panel.
 - `settings.json`: editor settings for the project, with `bin/` and `obj/` hidden.
-- `extensions.json`: recommends the C# extension.
+- `extensions.json`: recommends C# Dev Kit and the C# extension.
 
-MSBuild must be on your `PATH`. The easiest way is to start VS Code from a
-**Developer PowerShell for VS 2022** window:
-
-```powershell
-cd path\to\ImageOrientationChecker
-code .
-```
-
-Output goes to `bin\debug\` or `bin\release\`.
+Output goes to `bin\Debug\` or `bin\Release\`.
 
 > **Note:** Eclipse loads a compiled script only if its file name ends in `.esapi.dll`.
 > If you want to run the DLL instead of the `.cs` file, change `AssemblyName` to
@@ -87,7 +87,8 @@ Unit tests are in `tests/ImageOrientationChecker.Tests` and use MSTest. Run them
 dotnet test tests/ImageOrientationChecker.Tests
 ```
 
-You can also use the **Test** task in VS Code, or Test Explorer in Visual Studio.
+You can also use the **Test** task or the Testing view (C# Dev Kit) in VS Code, or Test
+Explorer in Visual Studio.
 
 The tests run on both `net48` (the framework Eclipse uses) and `net8.0`. `net48` runs
 only on Windows. On Linux or macOS, add `-f net8.0`.
@@ -144,4 +145,5 @@ Wildcard versions don't work with deterministic builds, so the `.csproj` sets
 - `AssemblyVersionAttribute`, which describes how wildcard build and revision numbers are generated:
   <https://learn.microsoft.com/dotnet/api/system.reflection.assemblyversionattribute>
 - Varian ESAPI documentation and examples: <https://github.com/VarianAPIs>
+- C# Dev Kit project format requirements: <https://code.visualstudio.com/docs/csharp/cs-dev-kit-faq>
 - MSTest documentation: <https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-intro>
